@@ -8,7 +8,7 @@ export default function Router() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Navigate to="/app1" replace />} />
+        <Route path="/" element={<Navigate to="/app2" replace />} />
         <Route path="/app1/*" element={<App1 />} />
         <Route path="/app2/*" element={<App2 />} />
         <Route path="/app3/*" element={<App3 />} />
