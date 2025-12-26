@@ -943,6 +943,5 @@ const styles = {
       </div>
     </div>
   );
-};
 
 export default App;
