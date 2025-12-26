@@ -771,8 +771,8 @@ const styles = {
   },
   exportOption: {
     display: 'flex',
-  );
-
+  }
+};
   const DailyView = () => (
     <div className="flex flex-col h-full bg-white">
       <div className="flex items-center justify-between p-4 border-b">
