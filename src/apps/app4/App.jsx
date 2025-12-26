@@ -770,7 +770,7 @@ const styles = {
     marginBottom: '24px'
   },
   exportOption: {
-    display: 'flex    </div>
+    display: 'flex    
   );
 
   const DailyView = () => (
