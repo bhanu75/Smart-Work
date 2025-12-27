@@ -1,0 +1,1139 @@
+import React, { useState, useEffect } from 'react';
+import { Calendar, Bell, Plus, ChevronRight, ChevronLeft, X, FileText, File, Grid, List, CheckSquare, MoreHorizontal, Menu, Edit2, Trash2, Clock, TrendingUp, Target, Zap } from 'lucide-react';
+
+export default function App() {
+  const [currentScreen, setCurrentScreen] = useState('planner');
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [events, setEvents] = useState([]);
+  const [editingEvent, setEditingEvent] = useState(null);
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [stats, setStats] = useState({ completed: 0, total: 0, streak: 0 });
+
+  const activityCategories = [
+    { name: 'Calling Client', color: 'orange', emoji: '📞', icon: 'bg-orange-300' },
+    { name: 'Meeting Client', color: 'blue', emoji: '🤝', icon: 'bg-blue-300' },
+    { name: 'Exercise', color: 'red', emoji: '💪', icon: 'bg-red-300' },
+    { name: 'Trading', color: 'green', emoji: '📈', icon: 'bg-green-300' },
+    { name: 'Learning', color: 'purple', emoji: '📚', icon: 'bg-purple-300' },
+    { name: 'Planning', color: 'yellow', emoji: '📋', icon: 'bg-yellow-300' },
+    { name: 'Reading', color: 'indigo', emoji: '📖', icon: 'bg-indigo-300' },
+    { name: 'Personal', color: 'pink', emoji: '🏠', icon: 'bg-pink-300' }
+  ];
+
+  useEffect(() => {
+    const saved = localStorage.getItem('productivityEvents');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      setEvents(parsed);
+      calculateStats(parsed);
+    } else {
+      const sampleEvents = [
+        {
+          id: Date.now() + 1,
+          title: 'Morning Client Call - Follow-up',
+          location: 'Phone',
+          time: '9:00 am',
+          duration: 30,
+          category: 'Calling Client',
+          date: formatDate(new Date()),
+          completed: false,
+          priority: 'high',
+          notes: 'Discuss Q4 targets'
+        },
+        {
+          id: Date.now() + 2,
+          title: 'Strategy Meeting with Team',
+          location: 'Conference Room A',
+          time: '10:30 am',
+          duration: 60,
+          category: 'Meeting Client',
+          date: formatDate(new Date()),
+          completed: false,
+          priority: 'high',
+          notes: ''
+        },
+        {
+          id: Date.now() + 3,
+          title: 'Gym Session - Strength Training',
+          location: 'Fitness First',
+          time: '1:00 pm',
+          duration: 45,
+          category: 'Exercise',
+          date: formatDate(new Date()),
+          completed: false,
+          priority: 'medium',
+          notes: 'Leg day'
+        },
+        {
+          id: Date.now() + 4,
+          title: 'Stock Market Analysis',
+          location: 'Home Office',
+          time: '3:00 pm',
+          duration: 90,
+          category: 'Trading',
+          date: formatDate(new Date()),
+          completed: false,
+          priority: 'high',
+          notes: 'Review tech stocks'
+        },
+        {
+          id: Date.now() + 5,
+          title: 'React Advanced Patterns Course',
+          location: 'Online',
+          time: '5:00 pm',
+          duration: 60,
+          category: 'Learning',
+          date: formatDate(new Date()),
+          completed: false,
+          priority: 'medium',
+          notes: 'Chapter 3-4'
+        }
+      ];
+      setEvents(sampleEvents);
+      localStorage.setItem('productivityEvents', JSON.stringify(sampleEvents));
+      calculateStats(sampleEvents);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (events.length > 0) {
+      localStorage.setItem('productivityEvents', JSON.stringify(events));
+      calculateStats(events);
+    }
+  }, [events]);
+
+  const calculateStats = (eventList) => {
+    const today = formatDate(new Date());
+    const todayEvents = eventList.filter(e => e.date === today);
+    const completed = todayEvents.filter(e => e.completed).length;
+    const total = todayEvents.length;
+    
+    const streak = calculateStreak(eventList);
+    setStats({ completed, total, streak });
+  };
+
+  const calculateStreak = (eventList) => {
+    let streak = 0;
+    let currentDate = new Date();
+    
+    while (streak < 30) {
+      const dateStr = formatDate(currentDate);
+      const dayEvents = eventList.filter(e => e.date === dateStr);
+      const allCompleted = dayEvents.length > 0 && dayEvents.every(e => e.completed);
+      
+      if (!allCompleted) break;
+      
+      streak++;
+      currentDate.setDate(currentDate.getDate() - 1);
+    }
+    
+    return streak;
+  };
+
+  const addOrUpdateEvent = (eventData) => {
+    if (editingEvent) {
+      const updated = events.map(e => e.id === editingEvent.id ? { ...eventData, id: editingEvent.id } : e);
+      setEvents(updated);
+      setEditingEvent(null);
+    } else {
+      const newEvent = { ...eventData, id: Date.now(), completed: false };
+      setEvents([...events, newEvent]);
+    }
+    setShowAddForm(false);
+  };
+
+  const deleteEvent = (id) => {
+    if (confirm('Delete this activity?')) {
+      setEvents(events.filter(e => e.id !== id));
+    }
+  };
+
+  const toggleComplete = (id) => {
+    const updated = events.map(e => e.id === id ? { ...e, completed: !e.completed } : e);
+    setEvents(updated);
+  };
+
+  const startEdit = (event) => {
+    setEditingEvent(event);
+    setShowAddForm(true);
+    setCurrentScreen('input');
+  };
+
+  const filteredEvents = events.filter(e => e.date === formatDate(selectedDate));
+
+  const renderScreen = () => {
+    switch(currentScreen) {
+      case 'planner':
+        return <DailyPlannerScreen 
+          events={filteredEvents}
+          selectedDate={selectedDate}
+          onToggle={toggleComplete}
+          onEdit={startEdit}
+          onDelete={deleteEvent}
+          stats={stats}
+          setShowAddForm={setShowAddForm}
+          setCurrentScreen={setCurrentScreen}
+        />;
+      case 'input':
+        return <ScheduleInputScreen 
+          events={filteredEvents}
+          selectedDate={selectedDate}
+          setSelectedDate={setSelectedDate}
+          showAddForm={showAddForm}
+          setShowAddForm={setShowAddForm}
+          editingEvent={editingEvent}
+          setEditingEvent={setEditingEvent}
+          onSave={addOrUpdateEvent}
+          categories={activityCategories}
+        />;
+      case 'daily':
+        return <DailyViewScreen 
+          events={filteredEvents}
+          selectedDate={selectedDate}
+          setSelectedDate={setSelectedDate}
+          onToggle={toggleComplete}
+          onEdit={startEdit}
+          categories={activityCategories}
+        />;
+      case 'export':
+        return <ExportScreen 
+          events={events}
+          showModal={showExportModal}
+          setShowModal={setShowExportModal}
+          stats={stats}
+        />;
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-stone-100">
+      {renderScreen()}
+      <BottomNav active={currentScreen} setActive={setCurrentScreen} />
+    </div>
+  );
+}
+
+function formatDate(date) {
+  return date.toISOString().split('T')[0];
+}
+
+function formatDisplayDate(date) {
+  const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+  return `${days[date.getDay()]}, ${months[date.getMonth()]} ${date.getDate()}`;
+}
+
+function DailyPlannerScreen({ events, selectedDate, onToggle, onEdit, onDelete, stats, setShowAddForm, setCurrentScreen }) {
+  const sortedEvents = [...events].sort((a, b) => {
+    const timeA = convertTo24Hour(a.time);
+    const timeB = convertTo24Hour(b.time);
+    return timeA.localeCompare(timeB);
+  });
+
+  return (
+    <div className="min-h-screen bg-stone-100 pb-20">
+      <StatusBar />
+      <Header title="Daily Planner" showBell={true} />
+      
+      <div className="px-4 py-3">
+        <StatsCards stats={stats} />
+        
+        <div className="flex items-center justify-between my-4">
+          <span className="text-stone-700 font-medium">{formatDisplayDate(selectedDate)}</span>
+          <button 
+            onClick={() => setCurrentScreen('daily')}
+            className="flex items-center gap-2 text-stone-700 bg-white px-3 py-2 rounded-lg shadow-sm hover:shadow-md transition-shadow"
+          >
+            <Calendar className="w-4 h-4" />
+            <span className="text-sm">View Calendar</span>
+          </button>
+        </div>
+
+        <button 
+          onClick={() => {
+            setShowAddForm(true);
+            setCurrentScreen('input');
+          }}
+          className="w-full py-3 px-4 bg-gradient-to-r from-green-400 to-green-500 text-white rounded-xl flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all mb-4"
+        >
+          <Plus className="w-5 h-5" />
+          <span className="font-medium">Add New Activity</span>
+        </button>
+
+        <div className="space-y-3">
+          {sortedEvents.length === 0 ? (
+            <div className="text-center py-12 bg-white rounded-2xl">
+              <Target className="w-16 h-16 mx-auto text-stone-300 mb-3" />
+              <p className="text-stone-500 font-medium">No activities planned</p>
+              <p className="text-stone-400 text-sm mt-1">Add your first activity to get started</p>
+            </div>
+          ) : (
+            sortedEvents.map(event => (
+              <ActivityCard 
+                key={event.id} 
+                event={event}
+                onToggle={onToggle}
+                onEdit={onEdit}
+                onDelete={onDelete}
+              />
+            ))
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ScheduleInputScreen({ events, selectedDate, setSelectedDate, showAddForm, setShowAddForm, editingEvent, setEditingEvent, onSave, categories }) {
+  const [formData, setFormData] = useState({
+    title: '',
+    location: '',
+    time: '9:00 am',
+    duration: 30,
+    category: 'Calling Client',
+    priority: 'medium',
+    notes: '',
+    date: formatDate(selectedDate)
+  });
+
+  useEffect(() => {
+    if (editingEvent) {
+      setFormData(editingEvent);
+    } else {
+      setFormData({
+        title: '',
+        location: '',
+        time: '9:00 am',
+        duration: 30,
+        category: 'Calling Client',
+        priority: 'medium',
+        notes: '',
+        date: formatDate(selectedDate)
+      });
+    }
+  }, [editingEvent, selectedDate]);
+
+  const timeSlots = generateTimeSlots();
+
+  const handleSave = () => {
+    if (!formData.title.trim()) {
+      alert('Please enter activity title');
+      return;
+    }
+    onSave(formData);
+    setFormData({
+      title: '',
+      location: '',
+      time: '9:00 am',
+      duration: 30,
+      category: 'Calling Client',
+      priority: 'medium',
+      notes: '',
+      date: formatDate(selectedDate)
+    });
+  };
+
+  return (
+    <div className="min-h-screen bg-stone-100 pb-20">
+      <StatusBar />
+      <Header 
+        title={editingEvent ? "Edit Activity" : "Add New Activity"} 
+        showBack={true} 
+        onBack={() => {
+          setShowAddForm(false);
+          setEditingEvent(null);
+        }} 
+      />
+      
+      <div className="px-4 py-3">
+        <DateSelector selectedDate={selectedDate} setSelectedDate={setSelectedDate} />
+
+        {showAddForm ? (
+          <div className="mt-6 bg-white rounded-2xl p-5 shadow-lg">
+            <h3 className="font-semibold text-lg mb-4 flex items-center gap-2">
+              <Zap className="w-5 h-5 text-green-500" />
+              Activity Details
+            </h3>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-stone-700 mb-1">Activity Title *</label>
+                <input
+                  type="text"
+                  placeholder="e.g., Client Call - John Doe"
+                  value={formData.title}
+                  onChange={(e) => setFormData({...formData, title: e.target.value})}
+                  className="w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:ring-2 focus:ring-green-400 focus:border-transparent"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-stone-700 mb-1">Category *</label>
+                <select
+                  value={formData.category}
+                  onChange={(e) => setFormData({...formData, category: e.target.value})}
+                  className="w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:ring-2 focus:ring-green-400 focus:border-transparent"
+                >
+                  {categories.map(cat => (
+                    <option key={cat.name} value={cat.name}>{cat.emoji} {cat.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-medium text-stone-700 mb-1">Time</label>
+                  <select
+                    value={formData.time}
+                    onChange={(e) => setFormData({...formData, time: e.target.value})}
+                    className="w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:ring-2 focus:ring-green-400 focus:border-transparent"
+                  >
+                    {timeSlots.map(time => (
+                      <option key={time} value={time}>{time}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-stone-700 mb-1">Duration (min)</label>
+                  <select
+                    value={formData.duration}
+                    onChange={(e) => setFormData({...formData, duration: parseInt(e.target.value)})}
+                    className="w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:ring-2 focus:ring-green-400 focus:border-transparent"
+                  >
+                    <option value="15">15 min</option>
+                    <option value="30">30 min</option>
+                    <option value="45">45 min</option>
+                    <option value="60">1 hour</option>
+                    <option value="90">1.5 hours</option>
+                    <option value="120">2 hours</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-stone-700 mb-1">Location</label>
+                <input
+                  type="text"
+                  placeholder="Office, Home, Online, etc."
+                  value={formData.location}
+                  onChange={(e) => setFormData({...formData, location: e.target.value})}
+                  className="w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:ring-2 focus:ring-green-400 focus:border-transparent"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-stone-700 mb-1">Priority</label>
+                <div className="flex gap-2">
+                  {['high', 'medium', 'low'].map(p => (
+                    <button
+                      key={p}
+                      onClick={() => setFormData({...formData, priority: p})}
+                      className={`flex-1 py-2 rounded-lg font-medium transition-all ${
+                        formData.priority === p 
+                          ? 'bg-green-500 text-white shadow-md' 
+                          : 'bg-stone-200 text-stone-700 hover:bg-stone-300'
+                      }`}
+                    >
+                      {p.charAt(0).toUpperCase() + p.slice(1)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-stone-700 mb-1">Notes</label>
+                <textarea
+                  placeholder="Additional details or reminders..."
+                  value={formData.notes}
+                  onChange={(e) => setFormData({...formData, notes: e.target.value})}
+                  rows="3"
+                  className="w-full px-4 py-2.5 border border-stone-300 rounded-lg focus:ring-2 focus:ring-green-400 focus:border-transparent"
+                />
+              </div>
+
+              <button
+                onClick={handleSave}
+                className="w-full py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg font-medium shadow-md hover:shadow-lg transition-all"
+              >
+                {editingEvent ? 'Update Activity' : 'Add Activity'}
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="mt-6">
+            <h3 className="font-semibold text-lg mb-4 flex items-center gap-2">
+              <Clock className="w-5 h-5 text-stone-600" />
+              Today's Schedule
+            </h3>
+            <TimelineView events={events} />
+            
+            <button
+              onClick={() => setShowAddForm(true)}
+              className="fixed bottom-24 right-6 w-14 h-14 bg-gradient-to-br from-green-400 to-green-500 rounded-full flex items-center justify-center shadow-xl hover:shadow-2xl transition-all"
+            >
+              <Plus className="w-7 h-7 text-white" />
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function DailyViewScreen({ events, selectedDate, setSelectedDate, onToggle, onEdit, categories }) {
+  const navigateDate = (direction) => {
+    const newDate = new Date(selectedDate);
+    newDate.setDate(newDate.getDate() + direction);
+    setSelectedDate(newDate);
+  };
+
+  const sortedEvents = [...events].sort((a, b) => {
+    const timeA = convertTo24Hour(a.time);
+    const timeB = convertTo24Hour(b.time);
+    return timeA.localeCompare(timeB);
+  });
+
+  return (
+    <div className="min-h-screen bg-stone-100 pb-20">
+      <StatusBar />
+      <Header title="" />
+      
+      <div className="px-4 py-3">
+        <div className="flex items-center justify-between mb-4">
+          <button 
+            onClick={() => navigateDate(-1)}
+            className="p-2 hover:bg-stone-200 rounded-lg transition-colors"
+          >
+            <ChevronLeft className="w-6 h-6 text-stone-700" />
+          </button>
+          <span className="text-lg font-semibold">
+            {selectedDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+          </span>
+          <button 
+            onClick={() => navigateDate(1)}
+            className="p-2 hover:bg-stone-200 rounded-lg transition-colors"
+          >
+            <ChevronRight className="w-6 h-6 text-stone-700" />
+          </button>
+        </div>
+
+        <DateSelector selectedDate={selectedDate} setSelectedDate={setSelectedDate} />
+
+        <div className="mt-6">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="font-semibold text-lg">Activities</h3>
+            <span className="text-sm text-stone-500">
+              {sortedEvents.filter(e => e.completed).length} / {sortedEvents.length} completed
+            </span>
+          </div>
+          
+          {sortedEvents.length === 0 ? (
+            <div className="text-center py-12 bg-white rounded-2xl">
+              <Calendar className="w-16 h-16 mx-auto text-stone-300 mb-3" />
+              <p className="text-stone-500 font-medium">No activities for this day</p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {sortedEvents.map(event => (
+                <DailyViewCard 
+                  key={event.id} 
+                  event={event}
+                  onToggle={onToggle}
+                  onEdit={onEdit}
+                  categories={categories}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ExportScreen({ events, stats }) {
+  const [activeTab, setActiveTab] = useState('export');
+
+  const exportData = (format) => {
+    let data = '';
+    let filename = `productivity-export-${formatDate(new Date())}`;
+    
+    if (format === 'json') {
+      data = JSON.stringify(events, null, 2);
+      filename += '.json';
+    } else if (format === 'csv') {
+      const headers = 'Date,Time,Title,Category,Location,Duration,Priority,Completed,Notes\n';
+      const rows = events.map(e => 
+        `${e.date},${e.time},"${e.title}",${e.category},"${e.location}",${e.duration},${e.priority},${e.completed},"${e.notes}"`
+      ).join('\n');
+      data = headers + rows;
+      filename += '.csv';
+    } else {
+      data = events.map(e => 
+        `Date: ${e.date}\nTime: ${e.time}\nTitle: ${e.title}\nCategory: ${e.category}\nLocation: ${e.location}\nDuration: ${e.duration} min\nPriority: ${e.priority}\nCompleted: ${e.completed}\nNotes: ${e.notes}\n\n---\n\n`
+      ).join('');
+      filename += '.txt';
+    }
+    
+    const blob = new Blob([data], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const categoryStats = calculateCategoryStats(events);
+  const weeklyStats = calculateWeeklyStats(events);
+
+  return (
+    <div className="min-h-screen bg-stone-100 pb-20">
+      <StatusBar />
+      <Header title="Export & Analytics" />
+      
+      <div className="px-4 py-3">
+        <div className="flex gap-2 mb-6">
+          <button
+            onClick={() => setActiveTab('export')}
+            className={`flex-1 py-2 rounded-lg font-medium transition-all ${
+              activeTab === 'export' ? 'bg-green-500 text-white shadow-md' : 'bg-white text-stone-700'
+            }`}
+          >
+            Export
+          </button>
+          <button
+            onClick={() => setActiveTab('analytics')}
+            className={`flex-1 py-2 rounded-lg font-medium transition-all ${
+              activeTab === 'analytics' ? 'bg-green-500 text-white shadow-md' : 'bg-white text-stone-700'
+            }`}
+          >
+            Analytics
+          </button>
+        </div>
+
+        {activeTab === 'export' ? (
+          <div>
+            <div className="bg-white rounded-2xl p-5 shadow-lg mb-4">
+              <h3 className="font-semibold text-lg mb-4 flex items-center gap-2">
+                <FileText className="w-5 h-5 text-green-500" />
+                Export Your Data
+              </h3>
+              
+              <div className="text-sm text-stone-600 mb-4">
+                Total Activities: <span className="font-semibold">{events.length}</span>
+              </div>
+
+              <div className="space-y-3">
+                <button
+                  onClick={() => exportData('json')}
+                  className="w-full py-3 px-4 bg-stone-50 rounded-xl flex items-center gap-3 hover:bg-stone-100 transition-colors border border-stone-200"
+                >
+                  <File className="w-5 h-5 text-stone-500" />
+                  <div className="text-left flex-1">
+                    <div className="font-medium text-stone-800">Export as JSON</div>
+                    <div className="text-xs text-stone-500">Complete data with all fields</div>
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => exportData('csv')}
+                  className="w-full py-3 px-4 bg-stone-50 rounded-xl flex items-center gap-3 hover:bg-stone-100 transition-colors border border-stone-200"
+                >
+                  <Grid className="w-5 h-5 text-green-600" />
+                  <div className="text-left flex-1">
+                    <div className="font-medium text-stone-800">Export as CSV</div>
+                    <div className="text-xs text-stone-500">Open in Excel or Google Sheets</div>
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => exportData('txt')}
+                  className="w-full py-3 px-4 bg-stone-50 rounded-xl flex items-center gap-3 hover:bg-stone-100 transition-colors border border-stone-200"
+                >
+                  <FileText className="w-5 h-5 text-stone-500" />
+                  <div className="text-left flex-1">
+                    <div className="font-medium text-stone-800">Export as Text</div>
+                    <div className="text-xs text-stone-500">Simple text format</div>
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => alert('Google Calendar sync coming soon! This will allow automatic syncing of all your activities.')}
+                  className="w-full py-3 px-4 bg-gradient-to-r from-blue-50 to-blue-100 rounded-xl flex items-center gap-3 hover:from-blue-100 hover:to-blue-200 transition-colors border border-blue-200"
+                >
+                  <Calendar className="w-5 h-5 text-blue-600" />
+                  <div className="text-left flex-1">
+                    <div className="font-medium text-blue-900">Sync with Google Calendar</div>
+                    <div className="text-xs text-blue-600">Coming soon</div>
+                  </div>
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div>
+            <AnalyticsView stats={stats} categoryStats={categoryStats} weeklyStats={weeklyStats} />
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function StatsCards({ stats }) {
+  const completionRate = stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0;
+  
+  return (
+    <div className="grid grid-cols-3 gap-3 mb-4">
+      <div className="bg-white rounded-xl p-3 shadow-sm">
+        <div className="flex items-center gap-2 mb-1">
+          <CheckSquare className="w-4 h-4 text-green-500" />
+          <span className="text-xs text-stone-500">Done</span>
+        </div>
+        <div className="text-2xl font-bold text-stone-800">{stats.completed}</div>
+        <div className="text-xs text-stone-400">of {stats.total}</div>
+      </div>
+      
+      <div className="bg-white rounded-xl p-3 shadow-sm">
+        <div className="flex items-center gap-2 mb-1">
+          <TrendingUp className="w-4 h-4 text-blue-500" />
+          <span className="text-xs text-stone-500">Rate</span>
+        </div>
+        <div className="text-2xl font-bold text-stone-800">{completionRate}%</div>
+        <div className="text-xs text-stone-400">completion</div>
+      </div>
+      
+      <div className="bg-white rounded-xl p-3 shadow-sm">
+        <div className="flex items-center gap-2 mb-1">
+          <Zap className="w-4 h-4 text-orange-500" />
+          <span className="text-xs text-stone-500">Streak</span>
+        </div>
+        <div className="text-2xl font-bold text-stone-800">{stats.streak}</div>
+        <div className="text-xs text-stone-400">days</div>
+      </div>
+    </div>
+  );
+}
+
+function ActivityCard({ event, onToggle, onEdit, onDelete }) {
+  const categoryConfig = {
+    'Calling Client': { bg: 'bg-orange-100', badge: 'bg-orange-200', icon: 'bg-orange-300', emoji: '📞', border: 'border-orange-400' },
+    'Meeting Client': { bg: 'bg-blue-100', badge: 'bg-blue-200', icon: 'bg-blue-300', emoji: '🤝', border: 'border-blue-400' },
+    'Exercise': { bg: 'bg-red-100', badge: 'bg-red-200', icon: 'bg-red-300', emoji: '💪', border: 'border-red-400' },
+    'Trading': { bg: 'bg-green-100', badge: 'bg-green-200', icon: 'bg-green-300', emoji: '📈', border: 'border-green-400' },
+    'Learning': { bg: 'bg-purple-100', badge: 'bg-purple-200', icon: 'bg-purple-300', emoji: '📚', border: 'border-purple-400' },
+    'Planning': { bg: 'bg-yellow-100', badge: 'bg-yellow-200', icon: 'bg-yellow-300', emoji: '📋', border: 'border-yellow-400' },
+    'Reading': { bg: 'bg-indigo-100', badge: 'bg-indigo-200', icon: 'bg-indigo-300', emoji: '📖', border: 'border-indigo-400' },
+    'Personal': { bg: 'bg-pink-100', badge: 'bg-pink-200', icon: 'bg-pink-300', emoji: '🏠', border: 'border-pink-400' }
+  };
+
+  const config = categoryConfig[event.category] || categoryConfig['Personal'];
+  const priorityColors = {
+    high: 'text-red-600',
+    medium: 'text-orange-600',
+    low: 'text-green-600'
+  };
+
+  return (
+    <div className={`bg-white rounded-2xl p-4 shadow-sm hover:shadow-md transition-all border-l-4 ${config.border}`}>
+      <div className="flex items-start justify-between mb-2">
+        <div className="flex items-start gap-3 flex-1">
+          <div className={`w-12 h-12 ${config.icon} rounded-xl flex items-center justify-center text-xl flex-shrink-0`}>
+            {config.emoji}
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-1">
+              <h3 className={`font-semibold text-stone-800 ${event.completed ? 'line-through text-stone-400' : ''}`}>
+                {event.title}
+              </h3>
+              {event.priority === 'high' && (
+                <span className="text-xs px-2 py-0.5 bg-red-100 text-red-600 rounded-full">High</span>
+              )}
+            </div>
+            <div className="flex items-center gap-2 text-sm text-stone-500 mb-2">
+              <Clock className="w-3.5 h-3.5" />
+              <span>{event.time}</span>
+              <span>•</span>
+              <span>{event.duration} min</span>
+              {event.location && (
+                <>
+                  <span>•</span>
+                  <span className="truncate">{event.location}</span>
+                </>
+              )}
+            </div>
+            <div className="flex gap-2 flex-wrap">
+              <span className={`text-xs px-2 py-1 ${config.badge} rounded-md`}>
+                {event.category}
+              </span>
+            </div>
+            {event.notes && (
+              <p className="text-xs text-stone-500 mt-2 line-clamp-1">{event.notes}</p>
+            )}
+          </div>
+        </div>
+      </div>
+      
+      <div className="flex items-center gap-2 mt-3 pt-3 border-t border-stone-100">
+        <button
+          onClick={() => onToggle(event.id)}
+          className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+            event.completed 
+              ? 'bg-green-500 text-white' 
+              : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
+          }`}
+        >
+          <CheckSquare className="w-4 h-4" />
+          {event.completed ? 'Completed' : 'Mark Done'}
+        </button>
+        <button
+          onClick={() => onEdit(event)}
+          className="flex items-center gap-1 px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-sm font-medium hover:bg-blue-100 transition-colors"
+        >
+          <Edit2 className="w-3.5 h-3.5" />
+          Edit
+        </button>
+        <button
+          onClick={() => onDelete(event.id)}
+          className="flex items-center gap-1 px-3 py-1.5 bg-red-50 text-red-600 rounded-lg text-sm font-medium hover:bg-red-100 transition-colors ml-auto"
+        >
+          <Trash2 className="w-3.5 h-3.5" />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function TimelineView({ events }) {
+  const timeSlots = generateTimeSlots();
+  
+  return (
+    <div className="space-y-2">
+      {timeSlots.map((time) => {
+        const event = events.find(e => e.time === time);
+        return (
+          <TimeSlotDisplay key={time} time={time} event={event} />
+        );
+      })}
+    </div>
+  );
+}
+
+function TimeSlotDisplay({ time, event }) {
+  if (!event) {
+    return (
+      <div className="flex items-center gap-3 py-2">
+        <span className="text-sm text-stone-400 w-20 font-medium">{time}</span>
+        <div className="flex-1 border-t border-dashed border-stone-200" />
+      </div>
+    );
+  }
+
+  const categoryConfig = {
+    'Calling Client': { bar: 'bg-orange-400', bg: 'bg-orange-50' },
+    'Meeting Client': { bar: 'bg-blue-400', bg: 'bg-blue-50' },
+    'Exercise': { bar: 'bg-red-400', bg: 'bg-red-50' },
+    'Trading': { bar: 'bg-green-400', bg: 'bg-green-50' },
+    'Learning': { bar: 'bg-purple-400', bg: 'bg-purple-50' },
+    'Planning': { bar: 'bg-yellow-400', bg: 'bg-yellow-50' },
+    'Reading': { bar: 'bg-indigo-400', bg: 'bg-indigo-50' },
+    'Personal': { bar: 'bg-pink-400', bg: 'bg-pink-50' }
+  };
+
+  const config = categoryConfig[event.category] || categoryConfig['Personal'];
+
+  return (
+    <div className="flex items-start gap-3">
+      <span className="text-sm text-stone-600 w-20 pt-3 font-medium">{time}</span>
+      <div className={`flex-1 ${config.bg} rounded-xl p-3 relative shadow-sm border-l-4 ${config.bar}`}>
+        <h4 className="font-semibold text-stone-800">{event.title}</h4>
+        {event.location && <p className="text-sm text-stone-500">{event.location}</p>}
+        <div className="flex items-center gap-2 mt-2">
+          <span className="text-xs px-2 py-1 bg-white rounded-md text-stone-600">
+            {event.category}
+          </span>
+          <span className="text-xs text-stone-500">{event.duration} min</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function DailyViewCard({ event, onToggle, onEdit, categories }) {
+  const categoryConfig = {
+    'Calling Client': { bar: 'bg-orange-400', badge: 'bg-orange-200' },
+    'Meeting Client': { bar: 'bg-blue-400', badge: 'bg-blue-200' },
+    'Exercise': { bar: 'bg-red-400', badge: 'bg-red-200' },
+    'Trading': { bar: 'bg-green-400', badge: 'bg-green-200' },
+    'Learning': { bar: 'bg-purple-400', badge: 'bg-purple-200' },
+    'Planning': { bar: 'bg-yellow-400', badge: 'bg-yellow-200' },
+    'Reading': { bar: 'bg-indigo-400', badge: 'bg-indigo-200' },
+    'Personal': { bar: 'bg-pink-400', badge: 'bg-pink-200' }
+  };
+
+  const config = categoryConfig[event.category] || categoryConfig['Personal'];
+
+  return (
+    <div className="flex items-start gap-3">
+      <span className="text-sm text-stone-500 w-20 pt-3">{event.time}</span>
+      <div className="flex-1 bg-white rounded-xl p-3 relative flex items-center justify-between shadow-sm hover:shadow-md transition-all border-l-4 border-l-transparent hover:border-l-green-400">
+        <div className={`absolute left-0 top-0 bottom-0 w-1 ${config.bar} rounded-l-xl`} />
+        <div className="pl-3 flex-1">
+          <h4 className={`font-semibold text-stone-800 ${event.completed ? 'line-through text-stone-400' : ''}`}>
+            {event.title}
+          </h4>
+          {event.location && <p className="text-sm text-stone-500">{event.location}</p>}
+          <div className="flex items-center gap-2 mt-1">
+            <span className={`text-xs px-2 py-1 ${config.badge} rounded-md`}>
+              {event.category}
+            </span>
+            <span className="text-xs text-stone-500">{event.duration} min</span>
+          </div>
+        </div>
+        <button
+          onClick={() => onToggle(event.id)}
+          className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${
+            event.completed 
+              ? 'border-green-500 bg-green-500' 
+              : 'border-stone-300 hover:border-green-400'
+          }`}
+        >
+          {event.completed && <div className="w-3 h-3 bg-white rounded-full" />}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function AnalyticsView({ stats, categoryStats, weeklyStats }) {
+  return (
+    <div className="space-y-4">
+      <div className="bg-gradient-to-br from-green-400 to-green-500 rounded-2xl p-5 text-white shadow-lg">
+        <h3 className="text-lg font-semibold mb-2">Your Productivity Score</h3>
+        <div className="text-4xl font-bold mb-1">{stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0}%</div>
+        <p className="text-green-100 text-sm">Keep up the great work! 🎉</p>
+      </div>
+
+      <div className="bg-white rounded-2xl p-5 shadow-lg">
+        <h3 className="font-semibold text-lg mb-4 flex items-center gap-2">
+          <TrendingUp className="w-5 h-5 text-green-500" />
+          Category Breakdown
+        </h3>
+        <div className="space-y-3">
+          {Object.entries(categoryStats).map(([category, count]) => {
+            const total = Object.values(categoryStats).reduce((a, b) => a + b, 0);
+            const percentage = total > 0 ? Math.round((count / total) * 100) : 0;
+            
+            return (
+              <div key={category}>
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-sm font-medium text-stone-700">{category}</span>
+                  <span className="text-sm text-stone-500">{count} activities</span>
+                </div>
+                <div className="w-full bg-stone-200 rounded-full h-2">
+                  <div 
+                    className="bg-green-500 h-2 rounded-full transition-all"
+                    style={{ width: `${percentage}%` }}
+                  />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="bg-white rounded-2xl p-5 shadow-lg">
+        <h3 className="font-semibold text-lg mb-4 flex items-center gap-2">
+          <Calendar className="w-5 h-5 text-blue-500" />
+          Weekly Overview
+        </h3>
+        <div className="grid grid-cols-7 gap-2">
+          {weeklyStats.map((day, idx) => (
+            <div key={idx} className="text-center">
+              <div className="text-xs text-stone-500 mb-1">{day.day}</div>
+              <div className={`w-full h-12 rounded-lg flex items-center justify-center text-sm font-semibold ${
+                day.count > 0 ? 'bg-green-100 text-green-700' : 'bg-stone-100 text-stone-400'
+              }`}>
+                {day.count}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="bg-white rounded-2xl p-5 shadow-lg">
+        <h3 className="font-semibold text-lg mb-4 flex items-center gap-2">
+          <Target className="w-5 h-5 text-orange-500" />
+          Productivity Tips
+        </h3>
+        <ul className="space-y-2 text-sm text-stone-600">
+          <li className="flex items-start gap-2">
+            <span className="text-green-500 mt-0.5">✓</span>
+            <span>Schedule high-priority tasks in the morning when energy is peak</span>
+          </li>
+          <li className="flex items-start gap-2">
+            <span className="text-green-500 mt-0.5">✓</span>
+            <span>Use the 2-minute rule: If it takes less than 2 minutes, do it now</span>
+          </li>
+          <li className="flex items-start gap-2">
+            <span className="text-green-500 mt-0.5">✓</span>
+            <span>Block time for deep work without interruptions</span>
+          </li>
+        </ul>
+      </div>
+    </div>
+  );
+}
+
+function StatusBar() {
+  return null;
+}
+
+function Header({ title, showBack, onBack, showBell }) {
+  return (
+    <div className="bg-stone-100 px-4 py-3 flex items-center justify-between border-b border-stone-200">
+      <div className="flex items-center gap-3 flex-1">
+        {showBack && (
+          <button onClick={onBack} className="hover:bg-stone-200 p-1.5 rounded-lg transition-colors">
+            <ChevronLeft className="w-6 h-6 text-stone-700" />
+          </button>
+        )}
+        {title && <h1 className="text-xl font-semibold text-stone-800">{title}</h1>}
+      </div>
+      {showBell && (
+        <button className="hover:bg-stone-200 p-1.5 rounded-lg transition-colors">
+          <Bell className="w-5 h-5 text-stone-700" />
+        </button>
+      )}
+    </div>
+  );
+}
+
+function DateSelector({ selectedDate, setSelectedDate }) {
+  const getDates = () => {
+    const dates = [];
+    for (let i = -2; i <= 2; i++) {
+      const date = new Date(selectedDate);
+      date.setDate(date.getDate() + i);
+      dates.push(date);
+    }
+    return dates;
+  };
+
+  const dates = getDates();
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  return (
+    <div className="flex gap-2 justify-center">
+      {dates.map((date, idx) => {
+        const dateOnly = new Date(date);
+        dateOnly.setHours(0, 0, 0, 0);
+        const isToday = dateOnly.getTime() === today.getTime();
+        const isSelected = date.toDateString() === selectedDate.toDateString();
+        const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        
+        return (
+          <button
+            key={idx}
+            onClick={() => setSelectedDate(date)}
+            className={`flex flex-col items-center px-4 py-2 rounded-xl transition-all ${
+              isToday && isSelected ? 'bg-green-400 text-white shadow-md scale-105' : 
+              isSelected ? 'bg-green-300 text-white shadow-md' :
+              'bg-white text-stone-700 hover:bg-stone-50 shadow-sm'
+            }`}
+          >
+            <span className="text-xs font-medium">{isToday ? 'Today' : dayNames[date.getDay()]}</span>
+            <span className="text-lg font-bold">{date.getDate()}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function BottomNav({ active, setActive }) {
+  const navItems = [
+    { id: 'planner', label: 'Today', icon: Grid },
+    { id: 'input', label: 'Calendar', icon: List },
+    { id: 'daily', label: 'Tasks', icon: CheckSquare },
+    { id: 'export', label: 'More', icon: MoreHorizontal }
+  ];
+
+  return (
+    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-stone-200 shadow-2xl z-50">
+      <div className="flex justify-around items-center px-2 py-2 max-w-md mx-auto">
+        {navItems.map(item => (
+          <button
+            key={item.id}
+            onClick={() => setActive(item.id)}
+            className={`flex flex-col items-center gap-1 py-2 px-4 rounded-xl transition-all ${
+              active === item.id 
+                ? 'text-green-600 bg-green-50' 
+                : 'text-stone-400 hover:text-stone-600 hover:bg-stone-50'
+            }`}
+          >
+            <item.icon className={`w-6 h-6 ${active === item.id ? 'scale-110' : ''} transition-transform`} />
+            <span className="text-xs font-medium">{item.label}</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function generateTimeSlots() {
+  const slots = [];
+  for (let hour = 6; hour <= 22; hour++) {
+    const period = hour < 12 ? 'am' : 'pm';
+    const displayHour = hour > 12 ? hour - 12 : hour === 0 ? 12 : hour;
+    slots.push(`${displayHour}:00 ${period}`);
+    if (hour < 22) {
+      slots.push(`${displayHour}:30 ${period}`);
+    }
+  }
+  return slots;
+}
+
+function convertTo24Hour(time) {
+  const [timeStr, period] = time.split(' ');
+  let [hours, minutes] = timeStr.split(':').map(Number);
+  
+  if (period === 'pm' && hours !== 12) hours += 12;
+  if (period === 'am' && hours === 12) hours = 0;
+  
+  return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+}
+
+function calculateCategoryStats(events) {
+  const stats = {};
+  events.forEach(event => {
+    stats[event.category] = (stats[event.category] || 0) + 1;
+  });
+  return stats;
+}
+
+function calculateWeeklyStats(events) {
+  const today = new Date();
+  const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const stats = [];
+  
+  for (let i = 6; i >= 0; i--) {
+    const date = new Date(today);
+    date.setDate(date.getDate() - i);
+    const dateStr = formatDate(date);
+    const count = events.filter(e => e.date === dateStr && e.completed).length;
+    
+    stats.push({
+      day: dayNames[date.getDay()],
+      count: count
+    });
+  }
+  
+  return stats;
+}
