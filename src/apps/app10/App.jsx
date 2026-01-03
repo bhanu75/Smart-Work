@@ -1,40 +1,67 @@
 import { useState } from "react";
 
 export default function App() {
-  const [mobile, setMobile] = useState("");
+  const [numbers, setNumbers] = useState("");
   const [message, setMessage] = useState("");
-  const [status, setStatus] = useState("");
+  const [index, setIndex] = useState(0);
 
-  const handleSend = () => {
-    if (!mobile || !message) {
-      alert("Mobile number aur message dono bharo");
+  const startSending = () => {
+    const list = numbers
+      .split(",")
+      .map(n => n.trim())
+      .filter(Boolean);
+
+    if (!list.length || !message) {
+      alert("Numbers aur message dono required");
       return;
     }
 
-    setStatus("⏳ WhatsApp 10 second me open hoga...");
+    sendNext(list, 0);
+  };
+
+  const sendNext = (list, i) => {
+    if (i >= list.length) return;
 
     setTimeout(() => {
-      const formattedMobile = mobile.startsWith("91")
-        ? mobile
-        : `91${mobile}`;
+      const mobile = list[i].startsWith("91")
+        ? list[i]
+        : `91${list[i]}`;
 
-      const url = `https://wa.me/${formattedMobile}?text=${encodeURIComponent(
-        message
-      )}`;
-
+      const url = `https://wa.me/${mobile}?text=${encodeURIComponent(message)}`;
       window.location.href = url;
+
+      setIndex(i + 1);
     }, 10000);
   };
 
   return (
-    <div style={styles.container}>
-      <h2>📲 WhatsApp Reminder Test</h2>
+    <div style={{ padding: 20 }}>
+      <h3>📲 Bulk WhatsApp Test</h3>
 
-      <input
-        type="tel"
-        placeholder="Mobile number (without +91)"
-        value={mobile}
-        onChange={(e) => setMobile(e.target.value)}
+      <textarea
+        placeholder="98765...,99988...,91234..."
+        value={numbers}
+        onChange={e => setNumbers(e.target.value)}
+        rows={3}
+        style={{ width: "100%", marginBottom: 10 }}
+      />
+
+      <textarea
+        placeholder="Message"
+        value={message}
+        onChange={e => setMessage(e.target.value)}
+        rows={4}
+        style={{ width: "100%", marginBottom: 10 }}
+      />
+
+      <button onClick={startSending}>
+        Start WhatsApp Flow
+      </button>
+
+      {index > 0 && <p>Sent till: {index}</p>}
+    </div>
+  );
+}        onChange={(e) => setMobile(e.target.value)}
         style={styles.input}
       />
 
