@@ -20,20 +20,22 @@ export default function App() {
   };
 
   const openWhatsApp = (list, index) => {
-    if (index >= list.length) return;
+  if (index >= list.length) return;
 
-    setCurrent(index + 1);
+  setCurrent(index + 1);
 
-    setTimeout(() => {
-      const mobile = list[index].startsWith("91")
-        ? list[index]
-        : `91${list[index]}`;
+  setTimeout(() => {
+    const mobile = list[index].startsWith("91") ? list[index] : `91${list[index]}`;
+    const url = `https://wa.me/${mobile}?text=${encodeURIComponent(message)}`;
+    
+    // Open in new tab instead of same page
+    window.open(url, "_blank");
 
-      const url = `https://wa.me/${mobile}?text=${encodeURIComponent(message)}`;
-      window.location.href = url;
-    }, 3000);
-  };
-
+    // Next number
+    openWhatsApp(list, index + 1);
+  }, 3000);
+};
+  
   return (
     <div style={{ padding: 20, fontFamily: "Arial" }}>
       <h3>📲 WhatsApp Multi Send Test</h3>
