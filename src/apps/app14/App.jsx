@@ -155,12 +155,17 @@ const styles = {
     borderRadius: 18
   },
   input: {
-    width: "100%",
-    padding: 10,
-    borderRadius: 12,
-    border: "none",
-    marginBottom: 12
+  width: "100%",
+  padding: 12,
+  borderRadius: 12,
+  border: "none",
+  marginBottom: 12,
+
+  background: "#ffffff",   // white box
+  color: "#000000",        // text black (yehi missing tha)
+  fontSize: 16,
   },
+  
   result: {
     background: "#2c2c2e",
     padding: 12,
