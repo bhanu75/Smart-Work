@@ -8,10 +8,10 @@ import { useMemo, useState } from "react";
  */
 
 const PRODUCTS = [
-  { name: "Walmasta Lite", dbt: 80, pointsPerUnit: 4, tokenPerUnit: 5 },
-  { name: "Bison Emulsion Lite", dbt: 80, pointsPerUnit: 4, tokenPerUnit: 5 },
-  { name: "Walmasta Regular", dbt: 80, pointsPerUnit: 4, tokenPerUnit: 5 },
-  { name: "Bison Emulsion Regular", dbt: 80, pointsPerUnit: 4, tokenPerUnit: 5 },
+  { name: "Walmasta Lite", dbt: 0, pointsPerUnit: 4, tokenPerUnit: 5 },
+  { name: "Bison Emulsion Lite", dbt: 0, pointsPerUnit: 4, tokenPerUnit: 5 },
+  { name: "Walmasta Regular", dbt: 0, pointsPerUnit: 4, tokenPerUnit: 5 },
+  { name: "Bison Emulsion Regular", dbt: 0, pointsPerUnit: 4, tokenPerUnit: 5 },
 
   { name: "Walmasta Glow", dbt: 100, pointsPerUnit: 4, tokenPerUnit: 5 },
   { name: "Bison Emulsion Glow", dbt: 100, pointsPerUnit: 4, tokenPerUnit: 5 },
@@ -23,18 +23,18 @@ const PRODUCTS = [
   { name: "Silk Range", dbt: 400, pointsPerUnit: 24, tokenPerUnit: 5 },
   { name: "W’Coat Longlife Range", dbt: 400, pointsPerUnit: 24, tokenPerUnit: 5 },
 
-  { name: "W’Coat Exterior Primer", dbt: 80, pointsPerUnit: 4, tokenPerUnit: 5 },
-  { name: "Primer 996", dbt: 80, pointsPerUnit: 4, tokenPerUnit: 5 },
-  { name: "Primer 796", dbt: 80, pointsPerUnit: 4, tokenPerUnit: 5 },
+  { name: "W’Coat Exterior Primer", dbt: 0, pointsPerUnit: 4, tokenPerUnit: 5 },
+  { name: "Primer 996", dbt: 0, pointsPerUnit: 4, tokenPerUnit: 5 },
+  { name: "Primer 796", dbt: 0, pointsPerUnit: 4, tokenPerUnit: 5 },
 
   { name: "Normal Berger Putty", dbt: 0, pointsPerUnit: 2, tokenPerUnit: 2.5 },
-  { name: "Homeshield Waterproof Putty", dbt: 40, pointsPerUnit: 2, tokenPerUnit: 2.5 },
+  { name: "Homeshield Waterproof Putty", dbt: 0, pointsPerUnit: 2, tokenPerUnit: 2.5 },
 
   { name: "Kool N Seal", dbt: 100, pointsPerUnit: 12, tokenPerUnit: 10 },
-  { name: "Dampstop Advance", dbt: 12, pointsPerUnit: 12, tokenPerUnit: 50 },
+  { name: "Dampstop Advance", dbt: 0, pointsPerUnit: 12, tokenPerUnit: 50 },
 
-  { name: "Luxol PU Enamel", dbt: 12, pointsPerUnit: 12, tokenPerUnit: 0 },
-  { name: "Silk Glmart", dbt: 24, pointsPerUnit: 24, tokenPerUnit: 0 },
+  { name: "Luxol PU Enamel", dbt: 0, pointsPerUnit: 12, tokenPerUnit: 0 },
+  { name: "Silk Glmart", dbt: 0, pointsPerUnit: 24, tokenPerUnit: 0 },
 ];
 
 export default function App() {
