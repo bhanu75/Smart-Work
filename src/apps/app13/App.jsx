@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 
-export default function App() { const [shopName, setShopName] = useState("मेगा पेंट्स"); const [address, setAddress] = useState("प्रतापगढ़ रोड, छोटी सादरी, चित्तौड़गढ़, राजस्थान"); const [mobile, setMobile] = useState("7023621717"); const [billNo, setBillNo] = useState("492"); const [date, setDate] = useState(""); const [customer, setCustomer] = useState("");
+export default function App() { const [shopName, setShopName] = useState("किसान कृषि बाजार"); const [address, setAddress] = useState("पंचायत रोड, अरनिया जोशी, चित्तौड़गढ़, राजस्थान"); const [mobile, setMobile] = useState("9928494904"); const [billNo, setBillNo] = useState("642"); const [date, setDate] = useState(""); const [customer, setCustomer] = useState("");
 
 return ( <div className="min-h-screen flex justify-center items-center bg-gray-300"> <div className="relative border-2 border-black" style={{ width: "12cm", height: "20cm", backgroundImage: "url('https://www.transparenttextures.com/patterns/paper-fibers.png')", backgroundColor: "#f7a6c8", boxShadow: "0 0 6px rgba(0,0,0,0.4)", fontFamily: "'Noto Serif Devanagari', serif", color: "#1a1a1a", padding: "12px", }} > <div className="text-center"> <h1 className="text-2xl font-bold">{shopName}</h1> <p className="text-sm">पता : {address}</p> <p className="text-sm">मोबाइल : {mobile}</p> </div>
 
