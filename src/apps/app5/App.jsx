@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react"; import { motion } from "framer-motion"; import { Card, CardContent } from "@/components/ui/card"; import { Button } from "@/components/ui/button"; import { Input } from "@/components/ui/input"; import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"; import { Plus, Search, Pencil, Trash2 } from "lucide-react";
+import React, { useEffect, useState } from "react";  import { Card, CardContent } from "@/components/ui/card"; import { Button } from "@/components/ui/button"; import { Input } from "@/components/ui/input"; import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"; import { Plus, Search, Pencil, Trash2 } from "lucide-react";
 
 // 🔹 IMPORTANT: Replace with your deployed Google Apps Script Web App URL const API_URL = "https://script.google.com/macros/s/YOUR_DEPLOYMENT_ID/exec";
 
