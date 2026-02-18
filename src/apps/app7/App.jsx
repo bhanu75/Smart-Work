@@ -268,47 +268,4 @@ export default function App() {
       `}</style>
     </div>
   );
-                         }               boxShadow: "0 1px 6px rgba(0,0,0,0.07)", display: "flex", alignItems: "flex-start", gap: 14,
-                  }}>
-                    {/* Avatar */}
-                    <div style={{
-                      width: 42, height: 42, borderRadius: "50%", flexShrink: 0,
-                      background: `hsl(${(s.name.charCodeAt(0) * 37) % 360}, 70%, 60%)`,
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      color: "#fff", fontSize: 18, fontWeight: 700,
-                    }}>
-                      {s.name.charAt(0).toUpperCase()}
-                    </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                        <div style={{ fontSize: 16, fontWeight: 700, color: ios.text }}>{s.name}</div>
-                        <div style={{ fontSize: 11, color: ios.label }}>{s.time}</div>
-                      </div>
-                      {s.note && <div style={{ fontSize: 14, color: "#3C3C43", marginTop: 4, lineHeight: 1.4 }}>{s.note}</div>}
-                      <div style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 6 }}>
-                        <span style={{ fontSize: 11, background: ios.success + "22", color: ios.success, padding: "3px 8px", borderRadius: 6, fontWeight: 600 }}>✓ Submitted</span>
-                        <span style={{ fontSize: 11, color: ios.label }}>#{submissions.length - i}</span>
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => handleDelete(s.id)}
-                      style={{ background: "none", border: "none", cursor: "pointer", color: ios.danger, fontSize: 18, padding: "0 0 0 4px", flexShrink: 0 }}>
-                      ×
-                    </button>
-                  </div>
-                ))}
-              </>
-            )}
-          </div>
-        )}
-      </div>
-
-      <style>{`
-        * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateX(-50%) translateY(-8px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
-        input:focus, textarea:focus { border-color: ${ios.accent} !important; box-shadow: 0 0 0 3px ${ios.accent}33; }
-        button:active { opacity: 0.7; }
-      `}</style>
-    </div>
-  );
-}
+        }
