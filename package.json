@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Innovative Time Management App with Energy-Based Planning",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
@@ -12,6 +13,7 @@
   "dependencies": {
     "canvas-confetti": "^1.9.3",
     "lucide-react": "^0.263.1",
+    "papaparse": "^5.4.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.0.0",
